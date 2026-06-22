@@ -7,6 +7,7 @@ export interface GitCommit {
   sha: string;
   date: string;
   day: string;
+  author: string;
   message: string;
 }
 
@@ -14,7 +15,7 @@ export async function getDailyGitLog(): Promise<GitCommit[]> {
   // Mengambil commit dari tengah malam (awal hari ini)
   // Format pemisah unik: |-|
   // %H = Commit Hash, %ai = Author Date (ISO 8601), %s = Subject (Message)
-  const formatString = '%H|-|%ai|-|%s';
+  const formatString = '%H|-|%ai|-|%an|-|%s';
   const command = `git log --since="midnight" --pretty=format:"${formatString}"`;
 
   try {
@@ -24,15 +25,15 @@ export async function getDailyGitLog(): Promise<GitCommit[]> {
     }
 
     const lines = stdout.split('\n').filter(line => line.trim() !== '');
-    
+
     return lines.map(line => {
-      const [sha, isoDateStr, message] = line.split('|-|');
-      
+      const [sha, isoDateStr, author, message] = line.split('|-|');
+
       const dateObj = new Date(isoDateStr);
-      
+
       // Format tanggal: YYYY-MM-DD
       const date = dateObj.toISOString().split('T')[0];
-      
+
       // Format hari dalam bahasa Indonesia
       const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
       const day = days[dateObj.getDay()];
@@ -41,6 +42,7 @@ export async function getDailyGitLog(): Promise<GitCommit[]> {
         sha,
         date,
         day,
+        author,
         message
       };
     });
